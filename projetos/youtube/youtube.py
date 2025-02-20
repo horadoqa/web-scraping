@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from datetime import datetime
 
 # Caminho para o seu ChromeDriver
 chromedriver_path = "/usr/bin/chromedriver"  # Substitua pelo caminho do seu chromedriver
@@ -46,6 +47,18 @@ def send_email(subject, body):
     server.sendmail(sender_email, receiver_email, message.as_string())
     server.quit()
     print("E-mail enviado com sucesso!")
+
+# Função para registrar a mudança no número de inscritos no arquivo de log
+def log_subscriber_change(last_subscriber_count, current_subscriber_count):
+    # Obtém data e hora atual
+    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    log_message = f"{current_time} - O número de inscritos mudou! De {last_subscriber_count} para {current_subscriber_count}\n"
+    
+    # Abrir o arquivo subscribe.log e escrever a mensagem
+    with open("subscribe.log", "a") as log_file:
+        log_file.write(log_message)
+    
+    print(f"Log gravado: {log_message.strip()}")
 
 # Função para obter o número de inscritos
 def get_subscriber_count():
@@ -97,6 +110,7 @@ def check_subscriber_count_periodically():
             body = f'ALERTA: O número de inscritos mudou! De {last_subscriber_count} para {current_subscriber_count}.'
             print(body)
             send_email(subject, body)  # Enviar e-mail
+            log_subscriber_change(last_subscriber_count, current_subscriber_count)  # Gravar no log
             last_subscriber_count = current_subscriber_count
         else:
             print(f'O número de inscritos permanece o mesmo: {current_subscriber_count}. Nenhuma mensagem enviada.')
