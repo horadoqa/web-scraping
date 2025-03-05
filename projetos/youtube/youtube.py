@@ -1,6 +1,7 @@
 import time
 import smtplib
 import os
+import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -47,6 +48,28 @@ def send_email(subject, body):
     server.sendmail(sender_email, receiver_email, message.as_string())
     server.quit()
     print("E-mail enviado com sucesso!")
+
+# Função para enviar uma mensagem para o discord
+def send_discord_message(message):
+    webhook_url = os.getenv('DISCORD_WEBHOOK_URL')  # Substitua pelo seu Webhook URL
+
+    # Criação da mensagem
+    data = {
+        "content": message
+    }
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    # Enviar mensagem para o Discord
+    response = requests.post(webhook_url, json=data, headers=headers)
+    # print("Mensagem enviada para o Discord com sucesso!")
+
+    if response.status_code == 204:
+        print("Mensagem enviada para o Discord com sucesso!")
+    else:
+        print(f"Erro ao enviar mensagem: {response.status_code} - {response.text}")
 
 # Função para registrar a mudança no número de inscritos no arquivo de log
 def log_subscriber_change(last_subscriber_count, current_subscriber_count):
@@ -111,6 +134,7 @@ def check_subscriber_count_periodically():
             print(body)
             send_email(subject, body)  # Enviar e-mail
             log_subscriber_change(last_subscriber_count, current_subscriber_count)  # Gravar no log
+            send_discord_message(body)
             last_subscriber_count = current_subscriber_count
         else:
             print(f'O número de inscritos permanece o mesmo: {current_subscriber_count}. Nenhuma mensagem enviada.')
